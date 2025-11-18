@@ -2,15 +2,17 @@
 
 This repository is a fork of the [PJON project](https://github.com/gioblu/PJON) adding support for the [Croc SoC](https://github.com/pulp-platform/croc). It also includes the necessary strategy libraries to communicate with the pjdl hw implementation for croc, which can be found in the [pjon_on_croc](https://github.com/piussieber/pjon_on_croc) repository.
 
-To use this library on the croc platform, the respecitve platform-interface has to be activated with `#define CROC` bevor including the PJON-Library.After this the PJON library can be used as usual.\
+To use this library on the croc platform, the respecitve platform-interface has to be activated with `#define CROC` bevor including the PJON-Library. After this, the PJON library can be used as usual.\
 To use this library together with the pjon hardware on croc, the strategy can be included with a line similar to `#include "./lib/inc/PJON/src/PJON_PJDL_HW.h"`. A new bus with this strategy can then be initialized as usual for pjon with `PJON_PJDL_HW bus;` or `PJON<PJDL_HW> bus;`
 
 Examples using this library can be found in the [pjon_on_croc](https://github.com/piussieber/pjon_on_croc) repository.
 
 
+\
+(following: the original readme of pjon)
 
 --------------
-(following: the original readme of pjon)
+
 
 <img src="https://github.com/gioblu/PJON/blob/master/trademark/assets/PJON-color-50x50.png" alt="PJON">
 
