@@ -268,6 +268,34 @@
   #endif
 #endif
 
+/* CROC ---------------------------------------------------------------- */
+#if defined(CROC)
+  #if SWBB_MODE == 1
+      #define SWBB_BIT_WIDTH   44
+      #define SWBB_BIT_SPACER 110
+      #define SWBB_ACCEPTANCE  62
+      #define SWBB_READ_DELAY   0
+  #endif
+  #if SWBB_MODE == 2
+      #define SWBB_BIT_WIDTH   40
+      #define SWBB_BIT_SPACER  92
+      #define SWBB_ACCEPTANCE  57
+      #define SWBB_READ_DELAY   0
+  #endif
+  #if SWBB_MODE == 3
+      #define SWBB_BIT_WIDTH   28
+      #define SWBB_BIT_SPACER  70
+      #define SWBB_ACCEPTANCE  40
+      #define SWBB_READ_DELAY   0
+  #endif
+  #if SWBB_MODE == 4
+      #define SWBB_BIT_WIDTH   26
+      #define SWBB_BIT_SPACER  65
+      #define SWBB_ACCEPTANCE  37 
+      #define SWBB_READ_DELAY   0
+  #endif
+#endif
+
 /* Avoid error if any previous defined ------------------------------------ */
 #if SWBB_MODE == 1
   #ifndef SWBB_BIT_WIDTH
