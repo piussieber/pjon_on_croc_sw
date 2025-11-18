@@ -22,6 +22,10 @@
   #define LSBFIRST 1
   #define MSBFIRST 2
 
+  #define PJON_HW_BASE_ADDR 0x20001000
+  #define PJON_HW_OFFSET_ID 0x20
+  #define PJON_HW_OFFSET_ROUTER_MODE 0x24
+
   /* Generic constants ---------------------------------------------------- */
   #ifndef A0
     #define A0 0
@@ -60,7 +64,7 @@
   #endif
 
   #ifndef PJON_IO_PULL_DOWN
-    #define PJON_IO_PULL_DOWN(P) (void)0 // no pulldown in croc
+    #define PJON_IO_PULL_DOWN(P) gpio_pin_set_input(P) // no pulldown in croc -> use normal input
   #endif
 
   /* Random --------------------------------------------------------------- */ // ToDo: implement real random functions

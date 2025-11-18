@@ -29,6 +29,7 @@
 
 // PJDL HW Register Addresses
 #define PJDL_HW_BASE_ADDR 0x20001000
+#define PDJL_HW_OFFSET_ACTIVATE_DMA_RECEIVING 0
 #define PJDL_HW_OFFSET_PREAMBLE 4
 #define PJDL_HW_OFFSET_PAD 8
 #define PJDL_HW_OFFSET_DATA 12
@@ -36,6 +37,7 @@
 #define PJDL_HW_OFFSET_ENABLE_MODULE 20
 #define PJDL_HW_OFFSET_AXIS 0x18
 #define PJDL_HW_OFFSET_STATUS 0x1C
+#define PJDL_HW_OFFSET_DMA_RECEIVED_DATA_INDICATOR 0x28
 
 // PJDL HW Data bit definitions
 #define PJDL_HW_LAST_BIT  0x00000100
@@ -83,7 +85,7 @@ class PJDL_HW {
 
       *reg32(PJDL_HW_BASE_ADDR, PJDL_HW_OFFSET_ENABLE_MODULE) = 1;
 
-      *reg32(PJDL_HW_BASE_ADDR, 0x00<<2) = 0x00000001; // activate dma-receiving
+      *reg32(PJDL_HW_BASE_ADDR, PDJL_HW_OFFSET_ACTIVATE_DMA_RECEIVING) = 0x00000001; // activate dma-receiving
 
       return true;
     };
@@ -129,7 +131,7 @@ class PJDL_HW {
       // ToDo: compare timeout to original to make sure it is correct
       // ToDo: solve problem: + 1 should be enough in the next line, but does not work (do not receive anz more after last pulse or bevor firsts!)
       uint8_t timeout_repetitions = (uint8_t)((_timeout / ((2*SWBB_BIT_SPACER) + (SWBB_BIT_WIDTH/4))) + 2);
-      *reg32(PJDL_HW_BASE_ADDR, 0x00<<2) = 0x00000000; // deactivate dma-receiving
+      *reg32(PJDL_HW_BASE_ADDR, PDJL_HW_OFFSET_ACTIVATE_DMA_RECEIVING) = 0x00000000; // deactivate dma-receiving
       //printf("timeout: %x, one: %x\n", _timeout, (2*SWBB_BIT_SPACER) + (SWBB_BIT_WIDTH/4));
       *reg32(PJDL_HW_BASE_ADDR, PJDL_HW_OFFSET_AXIS) = PJDL_HW_LAST_BIT | PJDL_HW_ACK_REQUEST_BIT | timeout_repetitions; // request ACK
       while((*reg32(PJDL_HW_BASE_ADDR, PJDL_HW_OFFSET_STATUS)&PJDL_HW_DIRECT_SEND_DONE_MASK) == 0x00); // wait for command to start
@@ -141,7 +143,7 @@ class PJDL_HW {
           return SWBB_FAIL; // receiving ended, no response
         }
       }; 
-      *reg32(PJDL_HW_BASE_ADDR, 0x00<<2) = 0x00000001; // activate dma-receiving
+      *reg32(PJDL_HW_BASE_ADDR, PDJL_HW_OFFSET_ACTIVATE_DMA_RECEIVING) = 0x00000001; // activate dma-receiving
       return (*reg32(PJDL_HW_BASE_ADDR, PJDL_HW_OFFSET_AXIS)&0x000000FF); // return response
     };
 
@@ -151,12 +153,14 @@ class PJDL_HW {
     uint16_t receive_frame(uint8_t *data, uint16_t max_length) {
       // ToDo: check if receiving is not still in progress
       if(max_length == PJON_PACKET_MAX_LENGTH){ // ToDo: first bytes should be returned earlier
-        if((*reg32(PJDL_HW_BASE_ADDR, PJDL_HW_OFFSET_STATUS)&PJDL_HW_DIRECT_DATA_READY_MASK) != 0x00){
+        //if((*reg32(PJDL_HW_BASE_ADDR, PJDL_HW_OFFSET_STATUS)&PJDL_HW_DIRECT_DATA_READY_MASK) != 0x00){
+        if(*reg32(PJDL_HW_BASE_ADDR, PJDL_HW_OFFSET_DMA_RECEIVED_DATA_INDICATOR) != 0x00){ // check if dma has received data
           *reg32(IDMA_BASE_ADDR, IDMA_SOURCE_OFFSET) = PJDL_HW_BASE_ADDR + PJDL_HW_OFFSET_AXIS; // source
           *reg32(IDMA_BASE_ADDR, IDMA_DESTINATION_OFFSET) = (uint32_t)(data); // destination
           *reg32(IDMA_BASE_ADDR, IDMA_LENGTH_OFFSET) = max_length; // length & start
 
           while(*reg32(IDMA_BASE_ADDR, IDMA_DONE_OFFSET)==0x00); // wait for idma to complete the task
+          *reg32(PJDL_HW_BASE_ADDR, PJDL_HW_OFFSET_DMA_RECEIVED_DATA_INDICATOR) = 0x00; // reset the indicator
 
           //printf("PJON received %x, %x, %x, %x, %x, %x, %x, %x, %x\n", data[0], data[1], data[2], data[3] ,data[4],data[5],data[6],data[7],data[8]);
           //uart_write_flush();
@@ -207,7 +211,8 @@ class PJDL_HW {
 
     void send_frame(uint8_t *data, uint16_t length) {
       _timeout = (length * SWBB_RESPONSE_OFFSET) + SWBB_LATENCY;
-      while(*reg32(IDMA_BASE_ADDR, IDMA_DONE_OFFSET)==0x00); // wait for idma to complete the previous task
+      //while(*reg32(IDMA_BASE_ADDR, IDMA_DONE_OFFSET)==0x00); // wait for idma to complete the previous task
+      while((*reg32(IDMA_BASE_ADDR, IDMA_STATUS_OFFSET) & 0x80) !=0x00); // wait for the iDMA buffer to be empty
 
       *reg32(IDMA_BASE_ADDR, IDMA_SOURCE_OFFSET) = (uint32_t)(data); // source
       *reg32(IDMA_BASE_ADDR, IDMA_DESTINATION_OFFSET) = PJDL_HW_BASE_ADDR + PJDL_HW_OFFSET_AXIS; // destination

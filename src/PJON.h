@@ -61,6 +61,10 @@ limitations under the License. */
 #include "interfaces/PJON_Interfaces.h"
 #include "PJONDefines.h"
 
+#ifdef CROC
+  #include "util_cpp.h"
+#endif
+
 static void PJON_dummy_receiver_handler(
   uint8_t *,               // payload
   uint16_t,                // length
@@ -109,6 +113,9 @@ class PJON {
 
     PJON(uint8_t device_id) : strategy(Strategy()) {
       tx.id = device_id;
+      #ifdef CROC
+        *reg32(PJON_HW_BASE_ADDR, PJON_HW_OFFSET_ID) = device_id;
+      #endif
       set_default();
     };
 
@@ -118,6 +125,9 @@ class PJON {
 
     PJON(const uint8_t *b_id, uint8_t device_id) : strategy(Strategy()) {
       tx.id = device_id;
+      #ifdef CROC
+        *reg32(PJON_HW_BASE_ADDR, PJON_HW_OFFSET_ID) = device_id;
+      #endif
       PJONTools::copy_id(tx.bus_id, b_id, 4);
       config |= PJON_MODE_BIT;
       set_default();
@@ -718,6 +728,9 @@ class PJON {
 
     void set_id(uint8_t id) {
       tx.id = id;
+      #ifdef CROC
+        *reg32(PJON_HW_BASE_ADDR, PJON_HW_OFFSET_ID) = id;
+      #endif
     };
 
     /* Setting bus id */
@@ -799,6 +812,9 @@ class PJON {
 
     void set_router(bool state) {
       _router = state;
+      #ifdef CROC
+        *reg32(PJON_HW_BASE_ADDR, PJON_HW_OFFSET_ROUTER_MODE) = state;
+      #endif
     };
 
     /* Update the state of the send list:
